@@ -397,6 +397,9 @@ class DiscordWebhook:
         embeds_empty = not any(data["embeds"]) if "embeds" in data else True
         if embeds_empty and "content" not in data and bool(self.files) is False:
             logger.error("webhook message is empty! set content or embed data")
+
+        data["url"] = self.url
+
         return data
 
     def api_post_request(self) -> "requests.Response":
