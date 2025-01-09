@@ -296,6 +296,14 @@ class DiscordWebhook:
         self.username = kwargs.get("username", False)
         self.wait = kwargs.get("wait", True)
 
+        # Parse the ID from the URL if not explicitly passed
+        if self.id is None:
+            try:
+                chunks = self.url.split("/")
+                self.id = chunks[-2]
+            except (IndexError, AttributeError):
+                pass
+
     def add_embed(self, embed: Union[DiscordEmbed, Dict[str, Any]]) -> None:
         """
         Add an embedded rich content.
