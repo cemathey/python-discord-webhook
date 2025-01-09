@@ -399,6 +399,7 @@ class DiscordWebhook:
             logger.error("webhook message is empty! set content or embed data")
 
         data["url"] = self.url
+        data["id"] = self.id
 
         return data
 
