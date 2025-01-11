@@ -34,7 +34,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
 
     @property
     @asynccontextmanager
-    async def http_client(self) -> AsyncGenerator[Optional["httpx.AsyncClient"]]:
+    async def http_client(self) -> AsyncGenerator[Optional["httpx.AsyncClient"], None]:
         """
         A property that returns a httpx.AsyncClient instance that is used for a 'with' statement.
         Example:
