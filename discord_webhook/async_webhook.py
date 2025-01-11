@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from functools import partial
 from http.client import HTTPException
 from . import DiscordWebhook
-from typing import AsyncGenerator, Any, Coroutine, Callable
+from typing import AsyncGenerator, Any, Coroutine, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
 
     @property
     @asynccontextmanager
-    async def http_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
+    async def http_client(self) -> AsyncGenerator[Optional["httpx.AsyncClient"]]:
         """
         A property that returns a httpx.AsyncClient instance that is used for a 'with' statement.
         Example:
@@ -48,7 +48,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
             yield client
 
     async def api_post_request(  # type: ignore
-        self, *, client: httpx.AsyncClient | None = None
+        self, *, client: Optional["httpx.AsyncClient"] = None
     ) -> "httpx.Response":
         """
         Post the JSON converted webhook data to the specified url.
@@ -111,14 +111,17 @@ class AsyncDiscordWebhook(DiscordWebhook):
         return response
 
     async def execute(  # type: ignore
-        self, remove_embeds: bool = False
+        self,
+        remove_embeds: bool = False,
+        *,
+        client: Optional["httpx.AsyncClient"] = None,
     ) -> "httpx.Response":
         """
         Execute the sending of the webhook with the given data.
         :param bool remove_embeds: clear the stored embeds after webhook is executed
         :return: Response of the sent webhook
         """
-        response = await self.api_post_request()
+        response = await self.api_post_request(client=client)
         if response.status_code in [200, 204]:
             logger.debug("Webhook executed")
         elif response.status_code == 429 and self.rate_limit_retry:
@@ -138,7 +141,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
         return response
 
     async def edit(  # type: ignore
-        self, *, client: httpx.AsyncClient | None = None
+        self, *, client: Optional["httpx.AsyncClient"] = None
     ) -> Coroutine[Any, Any, "httpx.Response"]:
         """
         Edit an already sent webhook with updated data.
@@ -187,7 +190,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
         return response
 
     async def delete(  # type: ignore
-        self, *, client: httpx.AsyncClient | None = None
+        self, *, client: Optional["httpx.AsyncClient"] = None
     ) -> "httpx.Response":
         """
         Delete the already sent webhook.
