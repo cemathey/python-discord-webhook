@@ -394,15 +394,20 @@ class DiscordWebhook:
         self.url = url
         self.username = kwargs.get("username", False)
         self.wait = kwargs.get("wait", True)
-        self.components = kwargs.get('components')
+        self.components = kwargs.get("components")
 
         # Parse the ID from the URL if not explicitly passed
-        if kwargs.get("id") is None:
-            try:
-                chunks = self.url.split("/")
-                self.id = chunks[-2]
-            except (IndexError, AttributeError):
-                raise ValueError(f"`id` was not passed and not parseable from the URL")
+
+    @property
+    def id(self):
+        try:
+            chunks = self.url.split("/")
+            self._id = chunks[-2]
+        except (IndexError, AttributeError):
+            self._id = ""
+            logger.error(f"`id` was not parseable from the URL")
+
+        return self._id
 
     def as_dict(self) -> DiscordWebhookDict:
         data: DiscordWebhookDict = {
