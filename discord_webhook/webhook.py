@@ -394,6 +394,7 @@ class DiscordWebhook:
         self.url = url
         self.username = kwargs.get("username", False)
         self.wait = kwargs.get("wait", True)
+        self.components = kwargs.get('components')
 
         # Parse the ID from the URL if not explicitly passed
         if kwargs.get("id") is None:
