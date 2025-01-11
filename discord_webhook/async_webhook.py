@@ -86,7 +86,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
         return response
 
     async def handle_rate_limit(  # type: ignore
-        self, response, request: Callable[..., Coroutine[None, None, httpx.Response]]
+        self, response, request: Callable[..., Coroutine[None, None, "httpx.Response"]]
     ) -> "httpx.Response":
         """
         Handle the rate limit by resending the webhook until a successful response.
@@ -136,8 +136,8 @@ class AsyncDiscordWebhook(DiscordWebhook):
         if remove_embeds:
             self.remove_embeds()
         self.remove_files(clear_attachments=False)
-        if webhook_id := json.loads(response.content.decode("utf-8")).get("id"):
-            self.id = webhook_id
+        # if webhook_id := json.loads(response.content.decode("utf-8")).get("id"):
+        #     self.id = webhook_id
         return response
 
     async def edit(  # type: ignore
@@ -154,7 +154,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
             self.url, str
         ), "Webhook URL needs to be set in order to edit the webhook."
 
-        async def _edit(client: httpx.AsyncClient):
+        async def _edit(client: "httpx.AsyncClient"):
             url = f"{self.url}/messages/{self.id}"
             if bool(self.files) is False:
                 patch_kwargs = {
@@ -204,7 +204,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
         ), "Webhook URL needs to be set in order to delete the webhook."
         url = f"{self.url}/messages/{self.id}"
 
-        async def _delete(client: httpx.AsyncClient):
+        async def _delete(client: "httpx.AsyncClient"):
             response = await client.delete(url, timeout=self.timeout)
             if response.status_code in [200, 204]:
                 logger.debug("Webhook deleted")

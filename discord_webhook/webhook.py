@@ -339,7 +339,6 @@ class DiscordWebhook:
     Webhook for Discord
     """
 
-    id: str
     url: str
 
     allowed_mentions: AllowedMentionsDict | None
@@ -647,8 +646,8 @@ class DiscordWebhook:
             self.remove_embeds()
         self.remove_files(clear_attachments=False)
         response_content = json.loads(response.content.decode("utf-8"))
-        if webhook_id := response_content.get("id"):
-            self.id = webhook_id
+        # if webhook_id := response_content.get("id"):
+        #     self.id = webhook_id
         if attachments := response_content.get("attachments"):
             self.attachments = attachments
         return response
