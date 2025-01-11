@@ -1,4 +1,10 @@
-__all__ = ["DiscordWebhook", "DiscordEmbed", "AsyncDiscordWebhook"]
+__all__ = [
+    "DiscordWebhook",
+    "DiscordEmbed",
+    "AsyncDiscordWebhook",
+    "DiscordWebhookDict",
+    "DiscordEmbedDict",
+]
 
 
 from .webhook import DiscordWebhook, DiscordEmbed
