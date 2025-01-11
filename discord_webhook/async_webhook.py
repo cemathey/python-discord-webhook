@@ -4,8 +4,8 @@ import logging
 from contextlib import asynccontextmanager
 from functools import partial
 from http.client import HTTPException
-
 from . import DiscordWebhook
+from typing import AsyncGenerator, Any, Coroutine, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
 
     @property
     @asynccontextmanager
-    async def http_client(self) -> "httpx.AsyncClient":
+    async def http_client(self) -> AsyncGenerator[httpx.AsyncClient, None]:
         """
         A property that returns a httpx.AsyncClient instance that is used for a 'with' statement.
         Example:
@@ -43,16 +43,19 @@ class AsyncDiscordWebhook(DiscordWebhook):
         It will automatically close the client when the context is exited.
         :return: httpx.AsyncClient
         """
-        client = httpx.AsyncClient(mounts=self.proxies)
-        yield client
-        await client.aclose()
+        async with httpx.AsyncClient(mounts=self.proxies) as client:
+            # client = httpx.AsyncClient(mounts=self.proxies)
+            yield client
 
-    async def api_post_request(self) -> "httpx.Response":
+    async def api_post_request(  # type: ignore
+        self, *, client: httpx.AsyncClient | None = None
+    ) -> "httpx.Response":
         """
         Post the JSON converted webhook data to the specified url.
         :return:
         """
-        async with self.http_client as client:  # type: httpx.AsyncClient
+
+        async def _post_request(client: httpx.AsyncClient):
             if bool(self.files) is False:
                 response = await client.post(
                     self.url,
@@ -71,9 +74,20 @@ class AsyncDiscordWebhook(DiscordWebhook):
                     params=self._query_params,
                     timeout=self.timeout,
                 )
+
+            return response
+
+        if client is None:
+            async with self.http_client as client:
+                response = await _post_request(client)
+        else:
+            response = await _post_request(client)
+
         return response
 
-    async def handle_rate_limit(self, response, request) -> "httpx.Response":
+    async def handle_rate_limit(  # type: ignore
+        self, response, request: Callable[..., Coroutine[None, None, httpx.Response]]
+    ) -> "httpx.Response":
         """
         Handle the rate limit by resending the webhook until a successful response.
         :param response: Response
@@ -93,9 +107,12 @@ class AsyncDiscordWebhook(DiscordWebhook):
             await asyncio.sleep(wh_sleep)
             response = await request()
             if response.status_code in [200, 204]:
-                return response
+                break
+        return response
 
-    async def execute(self, remove_embeds=False) -> "httpx.Response":
+    async def execute(  # type: ignore
+        self, remove_embeds: bool = False
+    ) -> "httpx.Response":
         """
         Execute the sending of the webhook with the given data.
         :param bool remove_embeds: clear the stored embeds after webhook is executed
@@ -120,7 +137,9 @@ class AsyncDiscordWebhook(DiscordWebhook):
             self.id = webhook_id
         return response
 
-    async def edit(self) -> "httpx.Response":
+    async def edit(  # type: ignore
+        self, *, client: httpx.AsyncClient | None = None
+    ) -> Coroutine[Any, Any, "httpx.Response"]:
         """
         Edit an already sent webhook with updated data.
         :return: Response of the sent webhook
@@ -131,7 +150,8 @@ class AsyncDiscordWebhook(DiscordWebhook):
         assert isinstance(
             self.url, str
         ), "Webhook URL needs to be set in order to edit the webhook."
-        async with self.http_client as client:  # type: httpx.AsyncClient
+
+        async def _edit(client: httpx.AsyncClient):
             url = f"{self.url}/messages/{self.id}"
             if bool(self.files) is False:
                 patch_kwargs = {
@@ -158,7 +178,17 @@ class AsyncDiscordWebhook(DiscordWebhook):
                 )
             return response
 
-    async def delete(self) -> "httpx.Response":
+        if client is None:
+            async with self.http_client as client:
+                response = await _edit(client)
+        else:
+            response = await _edit(client)
+
+        return response
+
+    async def delete(  # type: ignore
+        self, *, client: httpx.AsyncClient | None = None
+    ) -> "httpx.Response":
         """
         Delete the already sent webhook.
         :return: webhook response
@@ -170,7 +200,8 @@ class AsyncDiscordWebhook(DiscordWebhook):
             self.url, str
         ), "Webhook URL needs to be set in order to delete the webhook."
         url = f"{self.url}/messages/{self.id}"
-        async with self.http_client as client:  # type: httpx.AsyncClient
+
+        async def _delete(client: httpx.AsyncClient):
             response = await client.delete(url, timeout=self.timeout)
             if response.status_code in [200, 204]:
                 logger.debug("Webhook deleted")
@@ -182,3 +213,11 @@ class AsyncDiscordWebhook(DiscordWebhook):
                     )
                 )
             return response
+
+        if client is None:
+            async with self.http_client as client:
+                response = await _delete(client)
+        else:
+            response = await _delete(client)
+
+        return response
