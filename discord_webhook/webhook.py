@@ -545,7 +545,10 @@ class DiscordWebhook:
         if self.content:
             data["content"] = self.content
         if self.embeds:
-            data["embeds"] = [embed.as_dict() for embed in self.embeds]
+            data["embeds"] = [
+                embed.as_dict() if isinstance(embed, DiscordEmbed) else embed
+                for embed in self.embeds
+            ]
         if self.thread_id:
             data["thread_id"] = self.thread_id
         if self.thread_name:
