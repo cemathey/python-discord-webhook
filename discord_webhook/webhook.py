@@ -79,6 +79,8 @@ class DiscordEmbed:
         self.set_color(kwargs.get("color"))  # type: ignore
         if timestamp := kwargs.get("timestamp"):
             self.set_timestamp(timestamp)
+        else:
+            self.timestamp = None
 
     def __len__(self) -> int:
         """Return the total length in characters of the embed
