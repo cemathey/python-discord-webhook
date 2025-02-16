@@ -541,6 +541,8 @@ class DiscordWebhook:
             "rate_limit_retry": self.rate_limit_retry,
         }
 
+        if self.message_id:
+            data["message_id"] = self.message_id
         if self.allowed_mentions:
             data["allowed_mentions"] = self.allowed_mentions
         if self.attachments:
