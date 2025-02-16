@@ -87,6 +87,7 @@ class DiscordWebhookDict(TypedDict):
     id: str
     rate_limit_retry: bool
 
+    message_id: NotRequired[str]
     allowed_mentions: NotRequired[AllowedMentionsDict]
     attachments: NotRequired[list[dict[str, Any]]]
     avatar_url: NotRequired[str]
