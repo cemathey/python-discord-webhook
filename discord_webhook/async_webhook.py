@@ -140,7 +140,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
 
     async def edit(  # type: ignore
         self, *, client: Optional["httpx.AsyncClient"] = None
-    ) -> Coroutine[Any, Any, "httpx.Response"]:
+    ) -> "httpx.Response":
         """
         Edit an already sent webhook with updated data.
         :return: Response of the sent webhook
@@ -156,7 +156,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
         ), "Webhook message ID needs to be set in order to edit the message."
 
         async def _edit(client: "httpx.AsyncClient"):
-            url = f"{self.url}/messages/{self.webhook_id}"
+            url = f"{self.url}/messages/{self.message_id}"
             if bool(self.files) is False:
                 patch_kwargs = {
                     "json": self.json,
@@ -206,7 +206,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
         assert isinstance(
             self.message_id, str
         ), "Webhook message ID needs to be set in order to delete the message."
-        url = f"{self.url}/messages/{self.webhook_id}"
+        url = f"{self.url}/messages/{self.message_id}"
 
         async def _delete(client: "httpx.AsyncClient"):
             response = await client.delete(url, timeout=self.timeout)
