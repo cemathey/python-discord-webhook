@@ -403,7 +403,7 @@ class DiscordWebhook:
         # Parse the ID from the URL if not explicitly passed
 
     @property
-    def id(self):
+    def webhook_id(self):
         try:
             chunks = self.url.split("/")
             self._id = chunks[-2]
@@ -416,7 +416,7 @@ class DiscordWebhook:
     def as_dict(self) -> DiscordWebhookDict:
         data: DiscordWebhookDict = {
             "url": self.url,
-            "id": self.id,
+            "id": self.webhook_id,
             "rate_limit_retry": self.rate_limit_retry,
         }
 
@@ -537,7 +537,7 @@ class DiscordWebhook:
         """
         data: DiscordWebhookDict = {
             "url": self.url,
-            "id": self.id,
+            "id": self.webhook_id,
             "rate_limit_retry": self.rate_limit_retry,
         }
 
@@ -668,11 +668,14 @@ class DiscordWebhook:
         :return: Response of the sent webhook
         """
         assert isinstance(
-            self.id, str
-        ), "Webhook ID needs to be set in order to edit the webhook."
+            self.webhook_id, str
+        ), "Webhook ID needs to be set in order to edit the message."
         assert isinstance(
             self.url, str
-        ), "Webhook URL needs to be set in order to edit the webhook."
+        ), "Webhook URL needs to be set in order to edit the message."
+        assert isinstance(
+            self.message_id, str
+        ), "Webhook message ID needs to be set in order to edit the message"
         url = f"{self.url}/messages/{self.message_id}"
         if bool(self.files) is False:
             request = partial(
@@ -694,7 +697,7 @@ class DiscordWebhook:
             )
         response = request()
         if response.status_code in [200, 204]:
-            logger.debug("Webhook with id {id} edited".format(id=self.id))
+            logger.debug("Webhook with id {id} edited".format(id=self.webhook_id))
         elif response.status_code == 429 and self.rate_limit_retry:
             response = self.handle_rate_limit(response, request)
             logger.debug("Webhook edited")
@@ -713,12 +716,15 @@ class DiscordWebhook:
         :return: webhook response
         """
         assert isinstance(
-            self.id, str
-        ), "Webhook ID needs to be set in order to delete the webhook."
+            self.webhook_id, str
+        ), "Webhook ID needs to be set in order to delete the message."
         assert isinstance(
             self.url, str
-        ), "Webhook URL needs to be set in order to delete the webhook."
-        url = f"{self.url}/messages/{self.id}"
+        ), "Webhook URL needs to be set in order to delete the message."
+        assert isinstance(
+            self.message_id, str
+        ), "Webhook message ID needs to be set in order to delete the message."
+        url = f"{self.url}/messages/{self.message_id}"
         request = partial(
             requests.delete, url, proxies=self.proxies, timeout=self.timeout
         )
@@ -732,7 +738,7 @@ class DiscordWebhook:
 
     def message_exists(self) -> bool:
         assert isinstance(
-            self.id, str
+            self.webhook_id, str
         ), "Webhook ID needs to be set in order to get the message."
         assert isinstance(
             self.url, str

@@ -136,8 +136,6 @@ class AsyncDiscordWebhook(DiscordWebhook):
         if remove_embeds:
             self.remove_embeds()
         self.remove_files(clear_attachments=False)
-        # if webhook_id := json.loads(response.content.decode("utf-8")).get("id"):
-        #     self.id = webhook_id
         return response
 
     async def edit(  # type: ignore
@@ -148,14 +146,17 @@ class AsyncDiscordWebhook(DiscordWebhook):
         :return: Response of the sent webhook
         """
         assert isinstance(
-            self.id, str
-        ), "Webhook ID needs to be set in order to edit the webhook."
+            self.webhook_id, str
+        ), "Webhook ID needs to be set in order to edit the message."
         assert isinstance(
             self.url, str
-        ), "Webhook URL needs to be set in order to edit the webhook."
+        ), "Webhook URL needs to be set in order to edit the message."
+        assert isinstance(
+            self.message_id, str
+        ), "Webhook message ID needs to be set in order to edit the message."
 
         async def _edit(client: "httpx.AsyncClient"):
-            url = f"{self.url}/messages/{self.id}"
+            url = f"{self.url}/messages/{self.webhook_id}"
             if bool(self.files) is False:
                 patch_kwargs = {
                     "json": self.json,
@@ -168,7 +169,7 @@ class AsyncDiscordWebhook(DiscordWebhook):
             request = partial(client.patch, url, **patch_kwargs)
             response = await request()
             if response.status_code in [200, 204]:
-                logger.debug("Webhook with id {id} edited".format(id=self.id))
+                logger.debug("Webhook with id {id} edited".format(id=self.webhook_id))
             elif response.status_code == 429 and self.rate_limit_retry:
                 response = await self.handle_rate_limit(response, request)
                 logger.debug("Webhook edited")
@@ -197,12 +198,15 @@ class AsyncDiscordWebhook(DiscordWebhook):
         :return: webhook response
         """
         assert isinstance(
-            self.id, str
-        ), "Webhook ID needs to be set in order to delete the webhook."
+            self.webhook_id, str
+        ), "Webhook ID needs to be set in order to delete the message."
         assert isinstance(
             self.url, str
-        ), "Webhook URL needs to be set in order to delete the webhook."
-        url = f"{self.url}/messages/{self.id}"
+        ), "Webhook URL needs to be set in order to delete the message."
+        assert isinstance(
+            self.message_id, str
+        ), "Webhook message ID needs to be set in order to delete the message."
+        url = f"{self.url}/messages/{self.webhook_id}"
 
         async def _delete(client: "httpx.AsyncClient"):
             response = await client.delete(url, timeout=self.timeout)
