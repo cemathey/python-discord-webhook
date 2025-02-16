@@ -416,7 +416,7 @@ class DiscordWebhook:
     def as_dict(self) -> DiscordWebhookDict:
         data: DiscordWebhookDict = {
             "url": self.url,
-            "id": self.webhook_id,
+            "webhook_id": self.webhook_id,
             "rate_limit_retry": self.rate_limit_retry,
         }
 
@@ -537,7 +537,7 @@ class DiscordWebhook:
         """
         data: DiscordWebhookDict = {
             "url": self.url,
-            "id": self.webhook_id,
+            "webhook_id": self.webhook_id,
             "rate_limit_retry": self.rate_limit_retry,
         }
 
