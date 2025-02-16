@@ -656,8 +656,8 @@ class DiscordWebhook:
             self.remove_embeds()
         self.remove_files(clear_attachments=False)
         response_content = json.loads(response.content.decode("utf-8"))
-        # if webhook_id := response_content.get("id"):
-        #     self.id = webhook_id
+        if message_id := response_content.get("id"):
+            self.message_id = message_id
         if attachments := response_content.get("attachments"):
             self.attachments = attachments
         return response
@@ -673,7 +673,7 @@ class DiscordWebhook:
         assert isinstance(
             self.url, str
         ), "Webhook URL needs to be set in order to edit the webhook."
-        url = f"{self.url}/messages/{self.id}"
+        url = f"{self.url}/messages/{self.message_id}"
         if bool(self.files) is False:
             request = partial(
                 requests.patch,
