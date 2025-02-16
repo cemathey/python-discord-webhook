@@ -84,7 +84,7 @@ class PollDict(TypedDict):
 
 class DiscordWebhookDict(TypedDict):
     url: str
-    id: str
+    webhook_id: str
     rate_limit_retry: bool
 
     message_id: NotRequired[str]
