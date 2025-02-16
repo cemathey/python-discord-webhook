@@ -343,6 +343,7 @@ class DiscordWebhook:
 
     url: str
 
+    message_id: str | None
     allowed_mentions: AllowedMentionsDict | None
     attachments: list[dict[str, Any]] | None
     avatar_url: str | None
@@ -364,6 +365,7 @@ class DiscordWebhook:
         Init Webhook for Discord.
         ---------
         :param str url: your discord webhook url
+        :keyword str message_id: the ID of a webhook message
         :keyword dict allowed_mentions: allowed mentions for the message
         :keyword dict attachments: attachments that should be included
         :keyword str avatar_url: override the default avatar of the webhook
@@ -380,6 +382,7 @@ class DiscordWebhook:
         :keyword str username: override the default username of the webhook
         :keyword bool wait: waits for server confirmation of message send before response (defaults to True)
         """
+        self.message_id = kwargs.get("message_id")
         self.allowed_mentions = kwargs.get("allowed_mentions", {})
         self.attachments = kwargs.get("attachments", [])
         self.avatar_url = kwargs.get("avatar_url")
@@ -417,6 +420,8 @@ class DiscordWebhook:
             "rate_limit_retry": self.rate_limit_retry,
         }
 
+        if self.message_id:
+            data["message_id"] = self.message_id
         if self.allowed_mentions:
             data["allowed_mentions"] = self.allowed_mentions
         if self.attachments:
@@ -724,6 +729,23 @@ class DiscordWebhook:
             response = self.handle_rate_limit(response, request)
             logger.debug("Webhook edited")
         return response
+
+    def message_exists(self) -> bool:
+        assert isinstance(
+            self.id, str
+        ), "Webhook ID needs to be set in order to get the message."
+        assert isinstance(
+            self.url, str
+        ), "Webhook URL needs to be set in order to get the message."
+        assert isinstance(
+            self.message_id, str
+        ), "Webhook message ID needs to be set in order to get the message."
+        url = f"{self.url}/messages/{self.message_id}"
+        response = requests.get(url)
+
+        if response.status_code == 404:
+            return False
+        return True
 
     @classmethod
     def create_batch(cls, urls: list[str], **kwargs) -> tuple["DiscordWebhook", ...]:
